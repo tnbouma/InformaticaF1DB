@@ -34,6 +34,7 @@ class colors:
     brown = '\033[38;2;150;75;0m'
     white = '\033[38;2;255;255;255m'
     black = '\033[38;2;0;0;0m'
+    grey = '\033[38;2;75;75;75m'
 
 ## ------------------------------------------------------
 ## ------------------ END CLASSES -----------------------
@@ -180,10 +181,15 @@ def VisualizePrint(substrings, modifiers):
         return
     sorted(substrings, key=len)
     for i in range(len(substrings[0])):
+        zerofound = False
         substring = ""
-        for table in substrings:
+        for index in range(len(substrings)):
+            table = substrings[index]
             try:
                 ## if it has an element
+                if (str(table[i]).strip() == "0" or str(table[i]).strip() == "None"):
+                    if index == 1 and "Grey1" in modifiers:
+                        zerofound = True
                 substring += str(table[i]) + " | "
             except:
                 ## if it ran out of elements
@@ -198,11 +204,22 @@ def VisualizePrint(substrings, modifiers):
                 print(colors.brown+substring+colors.ENDL)
             else:
                 print(substring)
+        elif zerofound:
+            print(colors.grey+substring+colors.ENDL)
         else:
             print(substring)
-    
+
+def ColorSubstring(b, e, substring, color):
+    beginsubstring = substring[:b]
+    cursubstring = substring[b:e]
+    endsubstring = substring[e:]
+
+    substring = beginsubstring+color+cursubstring+colors.ENDL+endsubstring
+    return substring
+
 def Visualize(datas):
-    clearterminal()
+
+    clearterminal() # <--- Doesn't always clear everything for some reason
 
     modifiers = []
     # look for special modifiers
@@ -221,6 +238,14 @@ def Visualize(datas):
                         maxis[index][i] = len(str(e[i]))
                 except:
                     maxis[index].append(len(str(e[i])))
+
+    indexoffsets = []
+    for i in range(len(maxis)):
+        indexoffsets.append([])
+        dd = 0
+        for e in maxis[i]:
+            indexoffsets[i].append(dd)
+            dd += e + 1
 
     # make separate substrings
     substrings = []
@@ -244,9 +269,13 @@ def Visualize(datas):
             # for every line of data
             elementsubstring = ""
             for element in e:
-                elementsubstring += f"'{element}', "
+                elementsubstring += f'"{element}", '
             elementsubstring = elementsubstring[:-2]
             substring = eval(f"BASEsubstring.format({elementsubstring})")
+            if "MultipleYearColor" in modifiers:
+                substring = ColorSubstring(indexoffsets[index][5], indexoffsets[index][6], substring, colors.brown)
+                substring = ColorSubstring(indexoffsets[index][3], indexoffsets[index][4], substring, colors.lightgrey)
+                substring = ColorSubstring(indexoffsets[index][1], indexoffsets[index][2], substring, colors.yellow)
             substrings[index].append(substring)
     
     ## print substrings
@@ -298,6 +327,10 @@ def Season():
     clearterminal()
     for row in cur.execute("SELECT position_text, driver_id, points FROM season_driver_standing WHERE year == "+str(year)):
         row = list(row)
+        if not str(row[0]).isdigit():
+            row[0] = "DSQ"
+        else:
+            row[0] = "P"+str(row[0])
         data.append(row)
 
     # Replace driver_id with driver name. e.g. "max-verstappen" with "Max Verstappen"            
@@ -312,6 +345,8 @@ def Season():
         row = list(row)
         if not str(row[0]).isdigit():
             row[0] = "DSQ"
+        else:
+            row[0] = "P"+str(row[0])
         data2.append(row)
 
     # Replace constructor_id with full constructor name. e.g. "ferrari" with "Scuderia Ferrari"
@@ -348,21 +383,169 @@ def MultipleSeasons():
         except:
             clearterminal()
             print("Sorry! This isn't an integer! Try typing two numbers with a '-' between 1958 and 2023. e.g. '2000-2001'")
-    data = [["Year", "Winner", "Points"]]
+    data = [["Year", "1st", "Points", "2nd", "Points", "3rd", "Points"]]
     
     # Select all winners from the years specified by the user
     clearterminal()
+    rows = []
     for row in cur.execute("SELECT year, driver_id, points FROM season_driver_standing WHERE position_number == 1 AND year >= "+str(begin)+" AND year <= "+str(end)):
         row = list(row)
         data.append(row)
+    for i in range(len(data)-1):
+        row = data[i+1]
+        for secondrow in cur.execute("SELECT driver_id, points FROM season_driver_standing WHERE position_number == 2 AND year == "+str(row[0])):
+            for e in secondrow:
+                row.append(e)
+        for secondrow in cur.execute("SELECT driver_id, points FROM season_driver_standing WHERE position_number == 3 AND year == "+str(row[0])):
+            for e in secondrow:
+                row.append(e)
+        data[i+1] = row
 
     # Replace driver_id with driver name. e.g. "max-verstappen" with "Max Verstappen"
     for i in range(len(data)):
         for name in cur.execute("SELECT name FROM driver WHERE id == '"+str(data[i][1])+"'"):
             data[i][1] = name[0]
+        for name in cur.execute("SELECT name FROM driver WHERE id == '"+str(data[i][3])+"'"):
+            data[i][3] = name[0]
+        for name in cur.execute("SELECT name FROM driver WHERE id == '"+str(data[i][5])+"'"):
+            data[i][5] = name[0]
 
     # Print to terminal
-    Visualize([data])
+    Visualize([data, "MultipleYearColor"])
+
+## -------------------- OPTION 3 ------------------------
+
+def Constructor():
+    data = []
+    constructors = []
+    i = 0
+    for row in cur.execute("SELECT id FROM constructor"):
+        ## total / (width / average character length) ==> total / maxelements in a row ==> elements in a column
+        constructors.append(row[0])
+        if i%(183 // (os.get_terminal_size().columns // 20)) == 0:
+            data.append([])
+        data[-1].append([row[0]])
+        i += 1
+    
+    failed = False
+    index = 0
+    while True:
+        Visualize(data)
+        if failed:
+            print("Make sure you spelled the name right.")
+        ans = input("Choose a Team to inspect (type name): ").lower()
+        failed = True
+        for i in range(len(constructors)):
+            if constructors[i].lower() == ans:
+                index = i
+                failed = False
+                break
+        if not failed:
+            break
+    data = [[["FullName"], ["Country"], ["BestChampionshipPosition"], ["TotalChampionshipWins"], ["TotalRaceStarts"], ["Total(1,2)finishes"], ["TotalPodiums"], ["TotalLaps"], ["TotalPoints"]]]
+    for row in cur.execute(f'SELECT full_name, country_id, best_championship_position, total_championship_wins, total_race_starts, total_1_and_2_finishes, total_podiums, total_race_laps, total_championship_points FROM constructor WHERE id == "{str(constructors[index])}"'):
+        data.append([])
+        row = list(row)
+        for i in range(len(row)):
+            if i == 1:
+                for r in cur.execute(f'SELECT name FROM country WHERE id == "{row[i]}"'):
+                    row[i] = r[0] 
+            data[-1].append([row[i]])
+    data.append([["position from the list"], ["  V  "]]) 
+    data.append([["tied with (*) other teams on this stat"], ["  V  "]])
+    items = ['best_championship_position', 'total_championship_wins', 'total_race_starts', 'total_1_and_2_finishes', 'total_podiums', 'total_race_laps', 'total_championship_points']
+    for i in range(len(items)):
+        v = items[i]
+        if data[1][i+2][0] == None:
+            ## check how many (TOTAL - NOT NULL) to get how many NULL there are.
+            for row in cur.execute(f'SELECT COUNT(*) FROM constructor WHERE {v} >= 0'):
+                items[i] = row[0]+1
+                data[3].append([183 - row[0]])
+            continue
+        if i == 0: ## less is better
+            for row in cur.execute(f'SELECT COUNT(*) FROM constructor WHERE {v} < {int(data[1][i+2][0])}'):
+                items[i] = row[0]+1
+        else: ## more is better
+            for row in cur.execute(f'SELECT COUNT(*) FROM constructor WHERE {v} > {int(data[1][i+2][0])}'):
+                items[i] = row[0]+1
+        for row in cur.execute(f'SELECT COUNT(*) FROM constructor WHERE {v} == {int(data[1][i+2][0])}'):
+            data[3].append([row[0]-1])
+
+            
+    for e in items:
+        data[2].append([e])
+
+    data.append("Grey1")
+    Visualize(data)
+
+## -------------------- OPTION 4 ------------------------
+
+def Driver():
+    data = []
+    driver = []
+    i = 0
+    for row in cur.execute("SELECT id FROM driver"):
+        ## total / (width / average character length) ==> total / maxelements in a row ==> elements in a column
+        driver.append(row[0])
+        if i%(901 // (os.get_terminal_size().columns // 30)) == 0:
+            data.append([])
+        data[-1].append([row[0]])
+        i += 1
+    
+    failed = False
+    index = 0
+    while True:
+        Visualize(data)
+        if failed:
+             print("Make sure you spelled the name right.")
+        ans = input("Choose a Driver to inspect (type name): ").lower()
+        failed = True
+        for i in range(len(driver)):
+            if driver[i].lower() == ans:
+                index = i
+                failed = False
+                break
+        if not failed:
+            break
+    data = [[["FullName"], ["Abbreviation"], ["Number"], ["Nationality"], ["DateOfBirth"], ["BestChampionshipPosition"], ["BestRaceResult"], ["TotalChampionshipWins"], ["TotalRaceWins"], ["Laps"], ["Podiums"], ["TotalPoints"], ["TotalPolePositions"], ["TotalFastestLaps"], ["TotalDriverOfTheDay"]]]
+    for row in cur.execute(f'SELECT full_name, abbreviation, permanent_number, nationality_country_id, date_of_birth, best_championship_position, best_race_result, total_championship_wins, total_race_wins, total_race_laps, total_podiums, total_championship_points, total_pole_positions, total_fastest_laps, total_driver_of_the_day FROM driver WHERE id == "{str(driver[index])}"'):
+        data.append([])
+        row = list(row)
+        for i in range(len(row)):
+            if i == 3:
+                for r in cur.execute(f'SELECT name FROM country WHERE id == "{row[i]}"'):
+                    row[i] = r[0] 
+            data[-1].append([row[i]])
+    data.append([["position from the list"], ["  -  "], ["  -  "], ["  -  "], ["  -  "]]) 
+    data.append([["tied with (*) other drivers on this stat"], ["  -  "], ["  -  "], ["  -  "], ["  -  "]])
+    items = ["best_championship_position", "best_race_result", "total_championship_wins", "total_race_wins", "total_race_laps", "total_podiums", "total_championship_points", "total_pole_positions", "total_fastest_laps", "total_driver_of_the_day"]
+    for i in range(len(items)):
+        v = items[i]
+        if data[1][i+5][0] == None:
+            ## check how many (TOTAL - NOT NULL) to get how many NULL there are.
+            for row in cur.execute(f'SELECT COUNT(*) FROM driver WHERE {v} >= 0'):
+                items[i] = row[0]+1
+                data[3].append([901 - row[0]])
+            continue
+        if i == 0 or i == 1:
+            for row in cur.execute(f'SELECT COUNT(*) FROM driver WHERE {v} < {data[1][i+5][0]}'):
+                items[i] = row[0]+1
+        else:
+            for row in cur.execute(f'SELECT COUNT(*) FROM driver WHERE {v} > {data[1][i+5][0]}'):
+                items[i] = row[0]+1
+        for row in cur.execute(f'SELECT COUNT(*) FROM driver WHERE {v} == {data[1][i+5][0]}'):
+            data[3].append([row[0]-1])
+
+            
+    for e in items:
+        data[2].append([e])
+
+    data.append("Grey1")
+    #clearterminal() ## <-- for some reason it doesn't always clear everything in the Visualize function...
+    Visualize(data)
+
+
+
 
 ## ------------------------------------------------------
 ## ----------------- END MENU OPTIONS -------------------
@@ -391,6 +574,12 @@ def main():
         clearterminal()
 
         match chosenmenupath:
+            case[1]:
+                ## get driver stats
+                Driver()
+            case[2]:
+                ## get constructor stats
+                Constructor()
             case [3,0]:
                 ## get user requested season
                 Season()
