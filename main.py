@@ -40,17 +40,6 @@ class colors:
 ## ------------------------------------------------------
 
 ## ------------------------------------------------------
-## ---------------- GLOBAL VARIABLES --------------------
-## ------------------------------------------------------
-
-cur = 0
-conn = 0
-
-## ------------------------------------------------------
-## --------------- END GLOBAL VARIABLES -----------------
-## ------------------------------------------------------
-
-## ------------------------------------------------------
 ## ----------------- BASIC FUNCTIONS --------------------
 ## ------------------------------------------------------
 
@@ -95,33 +84,9 @@ def CloseProgram(errormessage):
 ## ---------------- START-UP FUNCTIONS ------------------
 ## ------------------------------------------------------
 
-## resizes terminal
-def TryResizeTerminal(terminalrows, terminalcolumns):
-    if os.name == "posix":
-        return
-    try:
-        size = os.get_terminal_size()
-    except:
-        error("Couldn't get terminal handle, are you sure you're running this inside the terminal?")
-    # try to resize terminal
-    os.system(f"mode {terminalcolumns},{terminalrows}")
-    print(os.get_terminal_size())
-    if (os.get_terminal_size().columns != terminalcolumns) or (os.get_terminal_size().lines != terminalrows):
-        # if the resizing failed, print warning
-        warning("couldn't resize terminal properly, reverting process")
-        os.system(f"mode {size.columns},{size.lines}")
-        if (os.get_terminal_size().columns != size.columns) or (os.get_terminal_size().lines != size.lines):
-            # if the revert failed, throw error
-            error("reversion process went wrong!")
-
 def StartUp():
     global cur
     global conn
-
-    ## trying to resize terminal to assure data gets printed 
-    terminalrows = 30
-    terminalcolumns = 100
-    TryResizeTerminal(terminalrows,terminalcolumns)
 
     ## trying to connect database
     script_dir = os.path.dirname(__file__) # <-- Returns parent of main.py (tnbouma_db)
