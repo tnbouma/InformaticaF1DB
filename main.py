@@ -6,9 +6,14 @@ import sqlite3
 import os
 
 if os.name == "posix":
-    from getch import getch as WaitForUserInput   # Linux (+ Mac)
+    def WaitForUserInput():
+        print("\nPress Enter to return to main menu")
+        input()
 if os.name == "nt":
-    from msvcrt import getch as WaitForUserInput  # Windows
+    from msvcrt import getch as getch
+    def WaitForUserInput():
+        print("\nPress a key to return to main menu")
+        getch()
 
 ## ------------------------------------------------------
 ## ------------------- END IMPORT -----------------------
@@ -38,7 +43,6 @@ class colors:
 ## ---------------- GLOBAL VARIABLES --------------------
 ## ------------------------------------------------------
 
-size = 0
 cur = 0
 conn = 0
 
@@ -93,6 +97,8 @@ def CloseProgram(errormessage):
 
 ## resizes terminal
 def TryResizeTerminal(terminalrows, terminalcolumns):
+    if os.name == "posix":
+        return
     try:
         size = os.get_terminal_size()
     except:
@@ -110,15 +116,12 @@ def TryResizeTerminal(terminalrows, terminalcolumns):
 
 def StartUp():
     global cur
-    global size
     global conn
 
     ## trying to resize terminal to assure data gets printed 
     terminalrows = 30
     terminalcolumns = 100
     TryResizeTerminal(terminalrows,terminalcolumns)
-
-    size = os.get_terminal_size()
 
     ## trying to connect database
     script_dir = os.path.dirname(__file__) # <-- Returns parent of main.py (tnbouma_db)
@@ -287,7 +290,7 @@ def Visualize(datas):
         currentsize = 0
         for i in range(len(substrings)):
             currentsize += len(substrings[0][0])
-            if currentsize <= size.columns:
+            if currentsize <= os.get_terminal_size().columns:
                 currentsize += 3 # this is the size of the separator symbol " | "
                 currentsubstrings.append(substrings[0])
                 substrings.remove(substrings[0])
@@ -359,7 +362,7 @@ def Season():
 def MultipleSeasons():
     answer = int
     while True:
-        answer = input(f"Enter two years spaced by a '-' (1958-2023, max difference: {size.lines - 5} years): ")
+        answer = input(f"Enter two years spaced by a '-' (1958-2023, max difference: {os.get_terminal_size().lines - 5} years): ")
         try:
             answer = answer.split("-")
             begin = min(int(answer[0]), int(answer[1]))
@@ -372,9 +375,9 @@ def MultipleSeasons():
                 clearterminal()
                 print("At least one of the years you entered was too early! Try a later year.")
                 continue
-            if abs(begin - end) > size.lines - 5:
+            if abs(begin - end) > os.get_terminal_size().lines - 5:
                 clearterminal()
-                print(f"The difference between years is too big! (max: {size.lines - 5})")
+                print(f"The difference between years is too big! (max: {os.get_terminal_size().lines - 5})")
                 continue
             break
         except:
@@ -433,7 +436,6 @@ def main():
                 ## couldn't find path
                 error("Couldn't find specified path: "+str(chosenmenupath))
 
-        print("\nPress a key to return to main menu")
         WaitForUserInput()
 
 StartUp()
