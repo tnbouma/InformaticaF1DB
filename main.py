@@ -4,6 +4,7 @@
 
 import sqlite3
 import os
+import time
 
 if os.name == "posix":
     def WaitForUserInput():
@@ -35,6 +36,7 @@ class colors:
     white = '\033[38;2;255;255;255m'
     black = '\033[38;2;0;0;0m'
     grey = '\033[38;2;75;75;75m'
+    green = '\033[38;2;0;255;0m'
 
 ## ------------------------------------------------------
 ## ------------------ END CLASSES -----------------------
@@ -49,10 +51,10 @@ def error(errormessage):
     CloseProgram(errormessage)
 
 # prints a warning to the terminal, and waits for user to read it
-def warning(errormessage):
+def warning(errormessage, wait):
     print(colors.WARNING+"WARNING: "+str(errormessage)+colors.ENDL)
-    print("Press any key to continue")
-    WaitForUserInput()
+    if wait:
+        WaitForUserInput()
 
 # clears the terminal
 def clearterminal():
@@ -77,6 +79,36 @@ def CloseProgram(errormessage):
     # end program
     quit()
 
+def CheckTerminalSizeManual():
+    recommendedterminalwidth = 120
+    recommendedterminalheight = 30
+
+    if os.get_terminal_size().columns < recommendedterminalwidth:
+        if os.get_terminal_size().lines < recommendedterminalheight:
+            warning("Your terminal width and height ("+str(os.get_terminal_size().columns)+", "+str(os.get_terminal_size().lines)+") are lower than recommended! ("+str(recommendedterminalwidth)+", "+str(recommendedterminalheight)+")", False)
+        else:
+            warning("Your terminal width ("+str(os.get_terminal_size().columns)+") is lower than recommended! ("+str(recommendedterminalwidth)+")", False)
+        return 1
+    if os.get_terminal_size().lines < recommendedterminalheight:
+        warning("Your terminal height ("+str(os.get_terminal_size().lines)+") is lower than recommended! ("+str(recommendedterminalheight)+")", False)
+        return 1
+    print(colors.green+"terminal height and width are ok!"+colors.ENDL)
+    WaitForUserInput()
+    return 0
+
+def CheckTerminalSize():
+    repeat = False
+    if CheckTerminalSizeManual() > 0:
+        repeat = input("Do you want to resize your terminal? (y/n): ")
+        if repeat.lower() == "y" or repeat.lower() == "yes":
+            repeat = True
+        else:
+            repeat = False
+    while repeat:
+        if CheckTerminalSizeManual() == 0:
+            break
+
+
 ## ------------------------------------------------------
 ## --------------- END BASIC FUNCTIONS ------------------
 ## ------------------------------------------------------
@@ -99,8 +131,14 @@ def StartUp():
         error("cannot find "+relative_path+" in "+script_dir)
 
     ## connecting database
-    conn = sqlite3.connect(path) 
+    try:
+        conn = sqlite3.connect(path) 
+    except:
+        error("Couldn't open database!, Make sure you are running this program as an admin in the terminal!")
     cur = conn.cursor()
+
+    CheckTerminalSize()
+
 
 ## ------------------------------------------------------
 ## -------------- END START-UP FUNCTIONS ----------------
