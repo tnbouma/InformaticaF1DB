@@ -94,7 +94,7 @@ def StartUp():
     relative_path = 'f1db.db'
     path = os.path.join(script_dir, relative_path)
 
-    ## securing the given path leads to our database
+    ## making sure the given path leads to our database
     if not (os.path.isfile(path)):
         error("cannot find "+relative_path+" in "+script_dir)
 
@@ -387,7 +387,6 @@ def MultipleSeasons():
     
     # Select all winners from the years specified by the user
     clearterminal()
-    rows = []
     for row in cur.execute("SELECT year, driver_id, points FROM season_driver_standing WHERE position_number == 1 AND year >= "+str(begin)+" AND year <= "+str(end)):
         row = list(row)
         data.append(row)
@@ -544,6 +543,61 @@ def Driver():
     #clearterminal() ## <-- for some reason it doesn't always clear everything in the Visualize function...
     Visualize(data)
 
+## -------------------- OPTION 5 ------------------------
+
+def Circuit():
+    data = []
+    circuit = []
+    i = 0
+    for row in cur.execute("SELECT id FROM circuit"):
+        ## total / (width / average character length) ==> total / maxelements in a row ==> elements in a column
+        circuit.append(row[0])
+        if i%(77 // (os.get_terminal_size().columns // 30)) == 0:
+            data.append([])
+        data[-1].append([row[0]])
+        i += 1
+    failed = False
+    index = 0
+    while True:
+        Visualize(data)
+        if failed:
+             print("Make sure you spelled the name right.")
+        ans = input("Choose a Circuit to inspect (type name): ").lower()
+        failed = True
+        for i in range(len(circuit)):
+            if circuit[i].lower() == ans:
+                index = i
+                failed = False
+                break
+        if not failed:
+            break
+    
+    data = [[["FullName"],["PreviousNames"],["Type"],["Place"],["Country"],["Latitude"],["Longitude"],["TotalRacesHeld"]]]
+    for row in cur.execute(f'SELECT full_name, previous_names, type, place_name, country_id, latitude, longitude, total_races_held FROM circuit WHERE id == "{str(circuit[index])}"'):
+        data.append([])
+        row = list(row)
+        for i in range(len(row)):
+            if i == 4:
+                for r in cur.execute(f'SELECT name FROM country WHERE id == "{row[i]}"'):
+                    row[i] = r[0] 
+            if i == 1:
+                if row[i] == None:
+                    data[0].remove(data[0][1])
+                    continue
+                if ";" in str(row[i]):
+                    allprevnames = str(row[i]).split(";")
+                    for i in range(len(allprevnames)):
+                        v = allprevnames[i]
+                        if i == 0:
+                            data[-1].append([v])
+                            continue
+                        data[0].insert(2, [''])
+                        data[-1].append([v])
+                    continue
+                    
+            data[-1].append([row[i]])
+    Visualize(data)
+
 
 
 
@@ -574,6 +628,9 @@ def main():
         clearterminal()
 
         match chosenmenupath:
+            case [0]:
+                ## get circuit stats
+                Circuit()
             case[1]:
                 ## get driver stats
                 Driver()
