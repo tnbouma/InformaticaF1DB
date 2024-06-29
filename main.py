@@ -391,7 +391,7 @@ def Season():
     # get driver standings
     data = [["POS", "Driver","Points"]]
     clearterminal()
-    for row in cur.execute("SELECT position_text, driver_id, points FROM season_driver_standing WHERE year == "+str(year)):
+    for row in cur.execute("SELECT position_number, driver_id, points FROM season_driver_standing WHERE year == "+str(year)):
         row = list(row)
         if not str(row[0]).isdigit():
             row[0] = "DSQ"
@@ -507,8 +507,8 @@ def Constructor():
                 break
         if not failed:
             break
-    data = [[["FullName"], ["Country"], ["BestChampionshipPosition"], ["TotalChampionshipWins"], ["TotalRaceStarts"], ["Total(1,2)finishes"], ["TotalPodiums"], ["TotalLaps"], ["TotalPoints"]]]
-    for row in cur.execute(f'SELECT full_name, country_id, best_championship_position, total_championship_wins, total_race_starts, total_1_and_2_finishes, total_podiums, total_race_laps, total_championship_points FROM constructor WHERE id == "{str(constructors[index])}"'):
+    data = [[["FullName"], ["Country"], ["BestChampionshipPosition"], ["TotalChampionshipWins"], ["TotalRaceStarts"], ["TotalRaceWins"], ["Total(1,2)finishes"], ["TotalPodiums"], ["TotalLaps"], ["TotalPoints"]]]
+    for row in cur.execute(f'SELECT full_name, country_id, best_championship_position, total_championship_wins, total_race_starts, total_race_wins, total_1_and_2_finishes, total_podiums, total_race_laps, total_championship_points FROM constructor WHERE id == "{str(constructors[index])}"'):
         data.append([])
         row = list(row)
         for i in range(len(row)):
@@ -518,7 +518,7 @@ def Constructor():
             data[-1].append([row[i]])
     data.append([["position from the list"], ["  V  "]]) 
     data.append([["tied with (*) other teams on this stat"], ["  V  "]])
-    items = ['best_championship_position', 'total_championship_wins', 'total_race_starts', 'total_1_and_2_finishes', 'total_podiums', 'total_race_laps', 'total_championship_points']
+    items = ['best_championship_position', 'total_championship_wins', 'total_race_starts', 'total_race_wins', 'total_1_and_2_finishes', 'total_podiums', 'total_race_laps', 'total_championship_points']
     for i in range(len(items)):
         v = items[i]
         if data[1][i+2][0] == None:
