@@ -38,6 +38,10 @@ class colors:
     grey = '\033[38;2;75;75;75m'
     green = '\033[38;2;0;255;0m'
 
+settings = {
+    "ForcePrint":False,
+}
+
 ## ------------------------------------------------------
 ## ------------------ END CLASSES -----------------------
 ## ------------------------------------------------------
@@ -79,8 +83,8 @@ def CloseProgram(errormessage):
     # end program
     quit()
 
-def CheckTerminalSizeManual():
-    recommendedterminalwidth = 120
+def CheckTerminalSizeManual(repeat):
+    recommendedterminalwidth = 130
     recommendedterminalheight = 30
 
     if os.get_terminal_size().columns < recommendedterminalwidth:
@@ -93,19 +97,20 @@ def CheckTerminalSizeManual():
         warning("Your terminal height ("+str(os.get_terminal_size().lines)+") is lower than recommended! ("+str(recommendedterminalheight)+")", False)
         return 1
     print(colors.green+"terminal height and width are ok!"+colors.ENDL)
-    WaitForUserInput()
+    if repeat:
+        WaitForUserInput()
     return 0
 
 def CheckTerminalSize():
     repeat = False
-    if CheckTerminalSizeManual() > 0:
+    if CheckTerminalSizeManual(False) > 0:
         repeat = input("Do you want to resize your terminal? (y/n): ")
         if repeat.lower() == "y" or repeat.lower() == "yes":
             repeat = True
         else:
             repeat = False
     while repeat:
-        if CheckTerminalSizeManual() == 0:
+        if CheckTerminalSizeManual(True) == 0:
             break
 
 
@@ -148,11 +153,40 @@ def StartUp():
 ## -------------------- MENU SCRIPT ---------------------
 ## ------------------------------------------------------
 
+def PrintSettingsMenu():
+    clearterminal()
+    settingkeys = []
+    i = 0
+    print("0: Exit to main menu")
+    for key in settings:
+        i += 1
+        value = settings[key]
+        settingkeys.append(key)
+        print(str(i)+": "+str(key)+": "+str(value))
+    return settingkeys
+
+def SettingsMenu():
+    global settings
+    while True:
+        settingkeys = PrintSettingsMenu()
+        ans = input("Input number of setting you want to switch: ")
+        try:
+            ans = int(ans)
+            if ans == 0:
+                break
+            if ans <= len(settingkeys):
+                if settings[settingkeys[ans-1]]:
+                    settings[settingkeys[ans-1]] = False
+                else:
+                    settings[settingkeys[ans-1]] = True
+        except:
+            pass
+
 def printKeuzeMenu(km, l):
     ## for every element in keuzemenu print title of next menu or the string.
     if (l == 0):
         # only print this in the main menu
-        print("0: Terminate Process")
+        print("0: Settings")
     for i in range(len(km)):
         if type(km[i]) == type('string'):
             name = km[i]
@@ -169,17 +203,11 @@ def ChooseMenu(m, i, path):
         print("\ntry to enter a valid number :(\n")
     answer = input("choose a menu: ")
 
-    ## if choice is to terminate program
+    ## if choice is to open settings
     if answer == "0" and len(path) == 0:
-        while True:
-            clearterminal()
-            ans = input("Are you sure you want to exit the program? (y/n): ")
-            if (ans.lower() == "y" or ans.lower() == "yes"):
-                CloseProgram(0)
-            elif (ans.lower() == "n" or ans.lower() == "no"):
-                clearterminal()
-                return ChooseMenu(m, i-1, path)
-            
+        SettingsMenu()
+        clearterminal()
+        return ChooseMenu(m, i-1, path)
     try:
         ## try if answer is an integer
         answer = int(answer) - 1
@@ -321,8 +349,8 @@ def Visualize(datas):
         currentsubstrings = []
         currentsize = 0
         for i in range(len(substrings)):
-            currentsize += len(substrings[0][0])
-            if currentsize <= os.get_terminal_size().columns:
+            currentsize += len(substrings[0][0]) - (substrings[0][0].count("\033")*10) ## <-- Colorcodes don't take up space in the terminal and have 10 invisible characters on average
+            if (currentsize <= os.get_terminal_size().columns or (currentsubstrings == [] and settings["ForcePrint"] == True)):
                 currentsize += 3 # this is the size of the separator symbol " | "
                 currentsubstrings.append(substrings[0])
                 substrings.remove(substrings[0])
