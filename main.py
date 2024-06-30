@@ -4,17 +4,11 @@
 
 import sqlite3
 import os
-import time
 
-if os.name == "posix":
-    def WaitForUserInput():
-        print("\nPress Enter to return to main menu")
-        input()
-if os.name == "nt":
+try:
     from msvcrt import getch as getch
-    def WaitForUserInput():
-        print("\nPress a key to return to main menu")
-        getch()
+except:
+    pass
 
 ## ------------------------------------------------------
 ## ------------------- END IMPORT -----------------------
@@ -49,6 +43,13 @@ settings = {
 ## ------------------------------------------------------
 ## ----------------- BASIC FUNCTIONS --------------------
 ## ------------------------------------------------------
+
+def WaitForUserInput():
+    print("\nPress a key to return to main menu")
+    try:
+        getch()
+    except:
+        input()
 
 # closes program with an errormessage
 def error(errormessage):
@@ -399,9 +400,9 @@ def Season():
             row[0] = "P"+str(row[0])
         data.append(row)
 
-    # Replace driver_id with driver name. e.g. "max-verstappen" with "Max Verstappen"            
+    # Replace driver_id with driver name. e.g. 394 with "Max Verstappen"            
     for i in range(len(data)):
-        for name in cur.execute("SELECT name FROM driver WHERE id == '"+str(data[i][1])+"'"):
+        for name in cur.execute("SELECT name FROM driver WHERE INT_ID == '"+str(data[i][1])+"'"):
             data[i][1] = name[0]
 
     data2 = [["POS", "Constructor","Points"]]
@@ -415,9 +416,9 @@ def Season():
             row[0] = "P"+str(row[0])
         data2.append(row)
 
-    # Replace constructor_id with full constructor name. e.g. "ferrari" with "Scuderia Ferrari"
+    # Replace constructor_id with full constructor name. e.g. 293 with "Scuderia Ferrari"
     for i in range(len(data2)):
-        for name in cur.execute("SELECT full_name FROM constructor WHERE id == '"+str(data2[i][1])+"'"):
+        for name in cur.execute("SELECT full_name FROM constructor WHERE INT_ID == '"+str(data2[i][1])+"'"):
             data2[i][1] = name[0]
     
     # Print to terminal
@@ -466,13 +467,13 @@ def MultipleSeasons():
                 row.append(e)
         data[i+1] = row
 
-    # Replace driver_id with driver name. e.g. "max-verstappen" with "Max Verstappen"
+    # Replace driver_id with driver name. e.g. 243 with "Max Verstappen"
     for i in range(len(data)):
-        for name in cur.execute("SELECT name FROM driver WHERE id == '"+str(data[i][1])+"'"):
+        for name in cur.execute("SELECT name FROM driver WHERE INT_ID == '"+str(data[i][1])+"'"):
             data[i][1] = name[0]
-        for name in cur.execute("SELECT name FROM driver WHERE id == '"+str(data[i][3])+"'"):
+        for name in cur.execute("SELECT name FROM driver WHERE INT_ID == '"+str(data[i][3])+"'"):
             data[i][3] = name[0]
-        for name in cur.execute("SELECT name FROM driver WHERE id == '"+str(data[i][5])+"'"):
+        for name in cur.execute("SELECT name FROM driver WHERE INT_ID == '"+str(data[i][5])+"'"):
             data[i][5] = name[0]
 
     # Print to terminal
@@ -497,11 +498,11 @@ def Constructor():
     while True:
         Visualize(data)
         if failed:
-            print("Make sure you spelled the name right.")
-        ans = input("Choose a Team to inspect (type name): ").lower()
+           print("Make sure you spelled the name right. HINT: You can copy and paste!")
+        ans = input("Choose a Team to inspect (type name): ").strip().lower()
         failed = True
         for i in range(len(constructors)):
-            if constructors[i].lower() == ans:
+            if constructors[i].strip().lower() == ans:
                 index = i
                 failed = False
                 break
@@ -549,7 +550,7 @@ def Driver():
     data = []
     driver = []
     i = 0
-    for row in cur.execute("SELECT id FROM driver"):
+    for row in cur.execute("SELECT name FROM driver"):
         ## total / (width / average character length) ==> total / maxelements in a row ==> elements in a column
         driver.append(row[0])
         if i%(901 // (os.get_terminal_size().columns // 30)) == 0:
@@ -562,18 +563,18 @@ def Driver():
     while True:
         Visualize(data)
         if failed:
-             print("Make sure you spelled the name right.")
-        ans = input("Choose a Driver to inspect (type name): ").lower()
+            print("Make sure you spelled the name right. HINT: You can copy and paste!")
+        ans = input("Choose a Driver to inspect (type name): ").strip().lower()
         failed = True
         for i in range(len(driver)):
-            if driver[i].lower() == ans:
+            if driver[i].strip().lower() == ans:
                 index = i
                 failed = False
                 break
         if not failed:
             break
     data = [[["FullName"], ["Abbreviation"], ["Number"], ["Nationality"], ["DateOfBirth"], ["BestChampionshipPosition"], ["BestRaceResult"], ["TotalChampionshipWins"], ["TotalRaceWins"], ["Laps"], ["Podiums"], ["TotalPoints"], ["TotalPolePositions"], ["TotalFastestLaps"], ["TotalDriverOfTheDay"]]]
-    for row in cur.execute(f'SELECT full_name, abbreviation, permanent_number, nationality_country_id, date_of_birth, best_championship_position, best_race_result, total_championship_wins, total_race_wins, total_race_laps, total_podiums, total_championship_points, total_pole_positions, total_fastest_laps, total_driver_of_the_day FROM driver WHERE id == "{str(driver[index])}"'):
+    for row in cur.execute(f'SELECT full_name, abbreviation, permanent_number, nationality_country_id, date_of_birth, best_championship_position, best_race_result, total_championship_wins, total_race_wins, total_race_laps, total_podiums, total_championship_points, total_pole_positions, total_fastest_laps, total_driver_of_the_day FROM driver WHERE name == "{str(driver[index])}"'):
         data.append([])
         row = list(row)
         for i in range(len(row)):
@@ -627,11 +628,11 @@ def Circuit():
     while True:
         Visualize(data)
         if failed:
-             print("Make sure you spelled the name right.")
-        ans = input("Choose a Circuit to inspect (type name): ").lower()
+            print("Make sure you spelled the name right. HINT: You can copy and paste!")
+        ans = input("Choose a Circuit to inspect (type name): ").strip().lower()
         failed = True
         for i in range(len(circuit)):
-            if circuit[i].lower() == ans:
+            if circuit[i].strip().lower() == ans:
                 index = i
                 failed = False
                 break
@@ -643,6 +644,9 @@ def Circuit():
         data.append([])
         row = list(row)
         for i in range(len(row)):
+            if i == 2:
+                for r in cur.execute(f'SELECT typeSTRING FROM circuit_type WHERE typeID == {row[i]}'):
+                    row[i] = str(r[0]).capitalize() 
             if i == 4:
                 for r in cur.execute(f'SELECT name FROM country WHERE id == "{row[i]}"'):
                     row[i] = r[0] 
