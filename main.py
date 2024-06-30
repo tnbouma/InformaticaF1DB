@@ -45,10 +45,11 @@ settings = {
 ## ------------------------------------------------------
 
 def WaitForUserInput():
-    print("\nPress a key to return to main menu")
-    try:
+    if os.name == "nt":
+        print("\nPress a key to return to main menu")
         getch()
-    except:
+    else:
+        print("\nPress Enter to return to main menu")
         input()
 
 # closes program with an errormessage
