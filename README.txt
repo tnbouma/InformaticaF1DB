@@ -5,20 +5,25 @@ It is highly recommended to run "main.py" in the terminal in full screen!
 ----- CROSS PLATFORM ------
 
 Available on:
-- Windows (Developed and Tested on Windows 11)
+- Windows (Developed and Tested on Windows 11) -->	All Features
+- MacOS (Tested on MacOS Monterey v12.5) -->		Basic Features
 
 -------- ERRORS -----------
 
-if you get the error "Couldn't open database", it should be easily fixable by running "main.py" in the terminal. If the problem persists try running as an admin.
+if you get the error "Couldn't open database", it should be easily fixable by running "main.py" in the terminal. If the problem persists try running main.py as an admin.
 
-if you get the error "cannot find f1db.db in tnbouma_db", make sure f1db.db is inside the same folder as "main.py". You could also rebuild the f1db.db by opening the database in DB BROWSER (SQLite) and click on "File -> Export -> Database to SQL File -> Select All -> Save" And make sure you save the file in the tnbouma_db folder.
+if you get the error "cannot find f1db.db in tnbouma_db", make sure f1db.db is inside the same folder as "main.py". You could also rebuild the f1db.db by making a new file in DB Browser (SQLite) and choose File -> Import -> database from SQL file, you can use the f1db.sql in the tnbouma_db folder. Make sure you save the file as "f1db.db" in the tnbouma_db folder.
 
-IF DATA DOESN'T PRINT IT IS MOST LIKELY BECAUSE YOUR TERMINAL IS TOO SMALL!, THIS IS ESPECIALLY LIKELY TO HAPPEN IN MENU 4.2
+You could run into a menu not printing. This a problem that occurs when you don't have enough space in your terminal. You can fix this by either:
+- Making your terminal bigger (especially width)
+OR
+- Enabling ForcePrint (More information under the tab settings)
 
 ------- CODE LAYOUT -------
 
 - Import modules (OS specific)
 - Define color-codes
+- Define settings
 - Define basic functions (like errors, warnings, clearterminal, closeprogram, etc.)
 - Define terminal size related functions
 - Define StartUp functions (Check if database is in directory, Open database, Check terminal size, Check OS, etc.)
@@ -55,16 +60,13 @@ Warnings: <-- "Prints warning in yellow (And waits for user input in some cases)
 
 --- TERMINAL RESIZING ------
 
-The script checks if the terminal is big enough to comfortably print everything. If not it will ask the user if they want to resize or not.
+The script checks (on StartUp()) if the terminal is big enough to comfortably print everything. If not it will ask the user if they want to resize or not.
 
 If the user entered "y" or "yes"
---> Terminal will output updated size of terminal to enable the user to resize the terminal. The resizing program will automatically quit when the desired size has been reached.
+--> Terminal will output real-time size of terminal to enable the user to resize the terminal. The resizing program will automatically quit when the desired size has been reached.
 
 If the user entered "n" or "no"
---> User gets redirected to main program. (THIS IS ASKING FOR UNEXPECTED ERRORS and should ONLY be used when absolutely necessary)
---> IF DATA DOESN'T PRINT IT IS MOST LIKELY BECAUSE YOUR TERMINAL IS TOO SMALL!, THIS IS ESPECIALLY LIKELY TO HAPPEN IN MENU 4.2!
-
-This is due to the fact that I made a checker to see if there is any room left to print another table next to another table (see menu 4.1). But because menu 4.2 is a single big table it is quite easy run out of space resulting in the program printing infinite empty lists. (you probably need at least 130 characters horizontally)
+--> User gets redirected to main program. (THIS IS ASKING FOR UNEXPECTED BEHAVIOR and should ONLY be used when absolutely necessary)
 
 ------- SETTINGS -----------
 
@@ -97,15 +99,42 @@ Menu 3:
 
 Menu 4.1:
 - Shows driver + constructor standings of that year
-- Colorcoded
+- Colorcoded 1st, 2nd and 3rd places
 - NULL values regarding the position will result in DSQ's
 
 Menu 4.2:
 - Shows winner, runner-up and third person in the driver standings of that year
-- Colorcoded
+- Colorcoded 1st, 2nd and 3rd places
+- NULL values regarding the position will result in DSQ's
 
-** if you want to request the standings of more years at the same time, try to make your terminal bigger. The maximum amount of years is dependent on the available lines in your terminal, and yes it updates.
+** if you want to request the standings of more years at the same time, try to make your terminal bigger. The maximum amount of years is dependent on the available lines in your terminal.
+
+--------- DATABASE MANIPULATION -----------------
+
+I've downloaded the .SQL file from the F1DB releases tab and imported it into an empty database file.
+I've deleted unnecessary data (data which my script will not use) reducing the size (of the Data Base File) from over 100 MB to only 228 KB
+
+- I've replaced the repeating strings from column type (from circuit) with integers and added a conversion table.
+- Made Driver visuals dependent on name instead of id.
+- Replaced driver_id (in season_driver_standings) strings (nino-farina) with integers (655).
+- Did the same for country_id
+- Did the same for constructor_id (You can find the script in the folder "DatabaseManipulation")
+
+This reduces the data to a final 224 KB.
+
+-------------- FILES ----------------------------
+
+- DatabaseManipulation (Folder)
+---> DatabaseManipulation\SHORT SCRIPT.py 	->	Writes commands for database manipulation purposes to COMMANDS.txt (Saves time, otherwise you'd have to do 300 lines by hand)
+---> DatabaseManipulation\COMMANDS.txt     	->	text file for commands (I copied the commands from here)
+
+- f1db.sqbpro	-> Shortcut to open f1db.db in DB Browser SQLite
+- f1db.db	-> Gets used by main.py and is the "native" database file
+- f1db.sql	-> Acts as a back-up database which you can use to restore the database
+- main.py	-> Has all the menu's. Run this to browse the database.
+- README.txt	-> Has the explanations of the project.
 
 --------------- SOURCES -------------------------
 
-- Internet for documentation purposes
+- F1DB Main Page (https://github.com/f1db/f1db)
+- F1DB Downloads (https://github.com/f1db/f1db/releases) v2024.6.0 --> f1db-sql-sqlite.zip
