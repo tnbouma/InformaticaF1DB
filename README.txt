@@ -1,8 +1,8 @@
 --------- IMPORTANT --------------
 
-It is highly recommended to run "main.py" in the terminal in full screen!
+It is highly recommended to run "main.py" in the terminal in full screen! (On a machine running Windows)
 
------ CROSS PLATFORM ------
+----- SUPPORTED PLATFORMS ------
 
 Available on:
 - Windows (Developed and Tested on Windows 11) -->	All Features
@@ -10,7 +10,7 @@ Available on:
 
 -------- ERRORS -----------
 
-if you get the error "Couldn't open database", it should be easily fixable by running "main.py" in the terminal. If the problem persists try running main.py as an admin.
+if you get the error "Couldn't open database", it should be easily fixable by running "main.py" in the terminal.
 
 if you get the error "cannot find f1db.db in tnbouma_db", make sure f1db.db is inside the same folder as "main.py". You could also rebuild the f1db.db by making a new file in DB Browser (SQLite) and choose File -> Import -> database from SQL file, you can use the f1db.sql in the tnbouma_db folder. Make sure you save the file as "f1db.db" in the tnbouma_db folder.
 
@@ -112,15 +112,13 @@ Menu 4.2:
 --------- DATABASE MANIPULATION -----------------
 
 I've downloaded the .SQL file from the F1DB releases tab and imported it into an empty database file.
-I've deleted unnecessary data (data which my script will not use) reducing the size (of the Data Base File) from over 100 MB to only 228 KB
+I've deleted all unnecessary columns and tables (data which my script will not use) reducing the size (of the Data Base File) from over 100 MB to only 228 KB
 
 - I've replaced the repeating strings from column type (from circuit) with integers and added a conversion table.
 - Made Driver visuals dependent on name instead of id.
 - Replaced driver_id (in season_driver_standings) strings (nino-farina) with integers (655).
 - Did the same for country_id
-- Did the same for constructor_id (You can find the script in the folder "DatabaseManipulation")
-
-This reduces the data to a final 224 KB.
+- Did the same for constructor_id (You can find the script used to generate the commands in the folder "DatabaseManipulation")
 
 -------------- FILES ----------------------------
 
